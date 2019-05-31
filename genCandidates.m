@@ -1,10 +1,18 @@
 function [idx] = genCandidates(curPt, allPts, curPtIdx, limitR)
 
-  % First off, we want to narrow the possible search points by distance
-  [Idx, D] = rangesearch(allPts, curPt, limitR);
+% We want to throw away the points with bigger indices and narrow the
+% possible search points by distance (strictly less than limitR).
+minIdx = curPtIdx;
+for idxPtToInspect = (curPtIdx-1):-1:1    
+    ptToInspect = allPts(idxPtToInspect, :);
+    
+    if norm(ptToInspect(1:2)-curPt(1:2))<limitR
+        minIdx = idxPtToInspect;
+    else
+        break;
+    end
+end
+idx = minIdx:curPtIdx;
 
-  % Then, we want to throw away the points with bigger indices
-  M = Idx{1};
-  idx = M(find(Idx{1} <= curPtIdx));
-
-end %EOF
+end
+%EOF
