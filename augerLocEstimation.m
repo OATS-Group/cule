@@ -1,28 +1,36 @@
-clear all;
-close all;
+function [gdImmAS] = augerLocEstimation(year)
 
-% Change current dir.
-cd(fileparts(mfilename('fullpath')));
-addpath(fullfile(pwd));
+  addpath('./algorithms/pos-estimate/');
 
-% Load the data file D(:,1) - lat D(:,2) - lon D(:,3) - bearing
-D = load('./data/renfrow-2/7130_gps.log');
+  % Load in the data
+  % - with assumption that the path and the data both exist
+  % -- after loading the data in, the workspace will have `gdImm`
+  fname = strcat('./data/tablet/combine', '_imm_', num2str(year));
 
-% Allocate the struct.
-d = struct('lat', [], 'lon', [], ...
-    'x', [], 'y', [], ...
-    'bearing', []);
+  fprintf('Loading data `%s`\n', fname);
 
-% Put the existing data into the struct
-d.lat = D(:,1);
-d.lon = D(:,2);
-d.bearing = D(:,3);
+  load(fname);
 
-% TODO: Take care of points from different UTM zones; At least keep the
-% zones for future reference.
+  fprintf('Data was successfully loaded!\n');
 
-% Convert the lat/lon pairs to x/y pairs
-[d.x, d.y] = convertToXy(D(:,1), D(:,2));
+  fprintf('augerLocEstimation started ...\n\n');
+  tic;
+  gdImmAS = gdImm;
+  % Compute the auger locations
+  for m = 1:length(gdImm)
+    fprintf('ON FIELD %d\n', m);
+    % We don't want to process the empty cells
+    if isempty(gdImm{m})
+      fprintf('\tNo GPS data in this field, skip to the next one!\n\n');
+      continue
+    end
+    for n = 1:length(gdImm{m})
+      fprintf('\tDATA SET %d\n', n);
+      gdImmAS{m}{n}.augerSpoutLocs = computeAugerLoc(gdImm{m}{n}, false);
+    end
+    fprintf('\n');
+  end
+  fprintf('augerLocEstimation finished!\n\n');
+  toc;
 
-% Compute the auger locations
-augerLoc = computeAugerLoc(d, true);
+end%EOF

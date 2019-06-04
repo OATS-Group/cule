@@ -1,54 +1,36 @@
-clear all;
-close all;
+function [gdImmCC] = gcCenterLocEstimation(year)
 
-% Change current dir.
-cd(fileparts(mfilename('fullpath')));
-addpath(fullfile(pwd));
+  addpath('./algorithms/pos-estimate/');
 
-% Define the constants
-%   tabletToCenterOffset = -0.9144; % x direction
-tabletToCartCenterOffset = 7.9248; % y direction
+  % Load in the data
+  % - with assumption that the path and the data both exist
+  % -- after loading the data in, the workspace will have `gdImm`
+  fname = strcat('./data/tablet/kart', '_imm_', num2str(year));
 
-% Define the radius
-r = tabletToCartCenterOffset;
+  fprintf('Loading data `%s`\n', fname);
 
-% Load in grain cart data
-load('./data/renfrow-2/290_renfrow_2.mat'); % This loads struct `k`
+  load(fname);
 
-% TODO: Deal with zero-speed gaps.
+  fprintf('Data was successfully loaded!\n');
 
-% Obtain the easting and northing data
-pts = [k.x(k.speed > 0) k.y(k.speed > 0) k.bearing(k.speed > 0)];
-
-% Go through the points to find the grain cart center location
-gcCenterLocs = nan(length(pts),2);
-tic;
-for m = 1:length(pts)
-    % fprintf('On point %d of %d total points\n', m, length(pts));
-    curPt = pts(m,:);
-    idx = genCandidates(pts(m,:), pts, m, 1.25 * r);
-    if length(idx) == 1
-        % Assume the center is right behind the bearing direction.
-        gcCenterLocs(m,1) = curPt(1)+cosd(270-curPt(3));
-        gcCenterLocs(m,2) = curPt(2)+sind(270-curPt(3));
-    else
-        ptsPool = pts(idx,1:2);
-        gcCenterLocs(m,:) = findIntersects(curPt(1:2), ptsPool, r);
-        if isnan(sum(gcCenterLocs(m,:)))
-            % Assume the center is right behind the bearing direction.
-            gcCenterLocs(m,1) = curPt(1)+cosd(270-curPt(3));
-            gcCenterLocs(m,2) = curPt(2)+sind(270-curPt(3));
-        end
+  fprintf('gcCenterLocEstimation started ...\n\n');
+  tic;
+  gdImmCC = gdImm;
+  % Compute the auger locations
+  for m = 1:length(gdImm)
+    fprintf('ON FIELD %d\n', m);
+    % We don't want to process the empty cells
+    if isempty(gdImm{m})
+      fprintf('\tNo GPS data in this field, skip to the next one!\n\n');
+      continue
     end
-end
-toc;
+    for n = 1:length(gdImm{m})
+      fprintf('\tDATA SET %d\n', n);
+      gdImmCC{m}{n}.cartCenterLocs = computeGcCenterLoc(gdImm{m}{n}, false);
+    end
+    fprintf('\n');
+  end
+  fprintf('gcCenterLocEstimation finished!\n\n');
+  toc;
 
-figure; hold on;
-hCartCenter = plot(gcCenterLocs(:,1), gcCenterLocs(:,2), 'b*');
-hIsoBlue = plot(pts(:,1), pts(:,2), 'or');
-plot([pts(:,1) pts(:,1)+cosd(90-pts(:,3))]', ...
-    [pts(:,2) pts(:,2)+sind(90-pts(:,3))]', 'k-');
-plot([pts(:,1) gcCenterLocs(:,1)]', [pts(:,2) gcCenterLocs(:,2)]', ...
-    '--', 'Color', 0.8.*ones(1,3));
-axis equal; grid on;
-legend([hIsoBlue hCartCenter], 'IsoBlue', 'CartCenter');
+end%EOF
