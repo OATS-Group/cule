@@ -1,6 +1,6 @@
 function [uleParameters] = computeUleParameters(cb, gk)
 
-  uleParameters = inf(length(cb.gpsTime), 3);
+  uleParameters = nan(length(cb.gpsTime), 3);
   for m = 1:length(cb.gpsTime)
     I = find((gk.gpsTime / 1000) == (cb.gpsTime(m) / 1000));
     if ~isempty(I)
