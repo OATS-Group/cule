@@ -9,6 +9,7 @@ function [uleParameters] = computeUleParameters(cb, gk)
       uleParameters(m,1) = norm(p1 - p2);
       uleParameters(m,2) = cb.mu(m,1) - mean(gk.mu(I,1));
       uleParameters(m,3) = cb.v(m,1) - mean(gk.v(I,1));
+      uleParameters(m,4) = cb.v(m,1);
     end
   end
 

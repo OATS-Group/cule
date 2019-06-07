@@ -1,11 +1,11 @@
-function [gdImmAS] = augerLocEstimation(year)
+function [gdImmCC] = runGcCenterLocEstimation(year)
 
-  addpath('./algorithms/pos-estimate/');
+  addpath('./algorithms/ule-identify/');
 
   % Load in the data
   % - with assumption that the path and the data both exist
   % -- after loading the data in, the workspace will have `gdImm`
-  fname = strcat('./data/tablet/combine', '_imm_', num2str(year));
+  fname = strcat('./data/tablet/kart', '_imm_', num2str(year));
 
   fprintf('Loading data `%s`\n', fname);
 
@@ -13,9 +13,9 @@ function [gdImmAS] = augerLocEstimation(year)
 
   fprintf('Data was successfully loaded!\n');
 
-  fprintf('augerLocEstimation started ...\n\n');
+  fprintf('gcCenterLocEstimation started ...\n\n');
   tic;
-  gdImmAS = gdImm;
+  gdImmCC = gdImm;
   % Compute the auger locations
   for m = 1:length(gdImm)
     fprintf('ON FIELD %d\n', m);
@@ -26,11 +26,11 @@ function [gdImmAS] = augerLocEstimation(year)
     end
     for n = 1:length(gdImm{m})
       fprintf('\tDATA SET %d\n', n);
-      gdImmAS{m}{n}.augerSpoutLocs = computeAugerLoc(gdImm{m}{n}, false);
+      gdImmCC{m}{n}.cartCenterLocs = computeGcCenterLoc(gdImm{m}{n}, false);
     end
     fprintf('\n');
   end
-  fprintf('augerLocEstimation finished!\n\n');
+  fprintf('gcCenterLocEstimation finished!\n\n');
   toc;
 
 end%EOF

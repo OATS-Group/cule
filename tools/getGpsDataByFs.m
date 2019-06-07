@@ -19,20 +19,22 @@ function [out_gps] = getGpsDataByFs(year, m_type, fig)
   path = strcat('/backup-disk/GpsTrackData/', year);
   gps_fname = '/filesLoadedHistory.mat';
   fs_fname = '/extendedEnhancedFieldShapesUtm.mat';
+  corrected_headings_fname = '/headings_corrected_2018.mat';
 
   load(strcat(path, gps_fname)); % load in tracks
   load(strcat(path, fs_fname)); % load in field shapes
+  load(strcat(path, corrected_headings_fname)); % load in field shapes
 
   if strcmp(m_type, 'combine')
     d_indices = fileIndicesCombines;
-    orgGps = files(d_indices); % get only the combine data
   elseif strcmp(m_type, 'kart')
     d_indices = fileIndicesGrainKarts;
-    orgGps = files(d_indices); % get only the grain kart data
   elseif strcmp(m_type, 'truck')
     d_indices = fileIndicesTrucks;
-    orgGps = files(d_indices); % get only the truck data
   end
+
+  orgGps = files(d_indices); % get the data only for a particular machine
+  orgHeadings = vehsHeading(d_indices); % get the corrected headings data
 
   l = 1;
   uniq_gps_data_num = [];
@@ -43,6 +45,7 @@ function [out_gps] = getGpsDataByFs(year, m_type, fig)
     fprintf('For fs %d, we have the following gps data:\n',  m);
     % load field shape that fits the bbox
     fs = extendedEnhancedFieldShapesUtm{m};
+    fs.Alpha = 30;
 
     gps = orgGps;
     for n = 1:length(gps)
@@ -51,6 +54,7 @@ function [out_gps] = getGpsDataByFs(year, m_type, fig)
         fprintf('\tData number is: %d\n', n);
         fprintf('\tMachine type is: %s\n', gps(n).id);
         I = inShape(fs, [x y]);
+        headings = orgHeadings{n};
         % we only want GPS data that is in the bbox
         gps(n).time = gps(n).time(I);
         gps(n).gpsTime = gps(n).gpsTime(I);
@@ -58,7 +62,8 @@ function [out_gps] = getGpsDataByFs(year, m_type, fig)
         gps(n).lon = gps(n).lon(I);
         gps(n).altitude = gps(n).altitude(I);
         gps(n).speed = gps(n).speed(I);
-        gps(n).bearing = gps(n).bearing(I);
+%        gps(n).bearing = gps(n).bearing(I);
+        gps(n).bearing = headings(I);
         gps(n).accuracy = gps(n).accuracy(I) ;
         % add the unique GPS data num to a placeholder
         if ~(ismember(n, uniq_gps_data_num)) | isempty(uniq_gps_data_num)

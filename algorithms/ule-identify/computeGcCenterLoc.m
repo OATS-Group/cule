@@ -1,11 +1,18 @@
 function [gcCenterLocs] = computeGcCenterLoc(k, debugFlag)
 
   if ~exist('debugFlag', 'var')
-      debugFlag = false;
+    debugFlag = false;
+  end
+  if debugFlag
+    I = 10000:12000;
+    k.x = k.x(I);
+    k.y = k.y(I);
+    k.bearing = k.bearing(I);
+    k.speed = k.speed(I);
   end
 
   % Define the constants
-  % tabletToCenterOffset = -0.9144; % x direction
+  tabletToCenterOffset = 0.9144; % x direction
   tabletToCartCenterOffset = 7.9248; % y direction
 
   % Define the radius
@@ -14,6 +21,10 @@ function [gcCenterLocs] = computeGcCenterLoc(k, debugFlag)
   % TODO: Deal with zero-speed gaps.
   % Obtain the easting, northing, bearing, and speed data
   pts = [k.x k.y k.bearing k.speed];
+
+  pts = [pts(:,1) + tabletToCenterOffset .* cosd(180 - pts(:,3)), ...
+         pts(:,2) + tabletToCenterOffset .* sind(180 - pts(:,3)), ...
+         pts(:,3:4)];
 
   % Go through the points to find the grain cart center location
   gcCenterLocs = nan(length(pts),2);
@@ -44,10 +55,10 @@ function [gcCenterLocs] = computeGcCenterLoc(k, debugFlag)
   if debugFlag
     figure; hold on;
     hCartCenter = plot(gcCenterLocs(:,1), gcCenterLocs(:,2), 'b*');
-    hIsoBlue = plot(pts(:,1), pts(:,2), 'or');
-    plot([pts(:,1) pts(:,1)+cosd(90-pts(:,3))]', ...
-        [pts(:,2) pts(:,2)+sind(90-pts(:,3))]', 'k-');
-    plot([pts(:,1) gcCenterLocs(:,1)]', [pts(:,2) gcCenterLocs(:,2)]', ...
+    hIsoBlue = plot(k.x, k.y, 'or');
+    plot([k.x k.x+cosd(90-pts(:,3))]', ...
+        [k.y k.y+sind(90-pts(:,3))]', 'k-');
+    plot([k.x gcCenterLocs(:,1)]', [k.y gcCenterLocs(:,2)]', ...
         '--', 'Color', 0.8.*ones(1,3));
     axis equal; grid on;
     legend([hIsoBlue hCartCenter], 'IsoBlue', 'CartCenter');

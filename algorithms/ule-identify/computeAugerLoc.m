@@ -10,6 +10,10 @@ function [augerLocs] = computeAugerLoc(c, debugFlag)
       debugFlag = false;
   end
 
+  keySet = {'p&e 7130', 'p&e 8240'};
+  valueSet = {[-8.8392 0]', [-9.7536 0]'};
+  M = containers.Map(keySet,valueSet);
+
   % rotation matrix (clockwise)
   r_ = @(b) [cosd(b) sind(b); -sind(b) cosd(b)];
 
@@ -27,7 +31,7 @@ function [augerLocs] = computeAugerLoc(c, debugFlag)
   b = c.bearing;
 
   % offsets
-  offsets = [-9.2964 -1]';
+  offsets = M(c.id);
 
   % allocate auger spout locations
   augerLocs = nan(2, numInputLocs);

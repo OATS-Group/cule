@@ -7,6 +7,7 @@ function [ts, totDur, id, cleanUleIdx] = cleanUles(cb, uleIdx)
   rawUleTs = allTs(uleIdx);
 
   % Compute the difference in timestamps and find indices when
+  % the time difference > 1
   diffRawUleTs = diff(rawUleTs);
   I = find(diffRawUleTs > 1);
 
